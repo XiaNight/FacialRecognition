@@ -1,44 +1,72 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.model_selection import train_test_split
-import autokeras as ak
-
-# load data
-train_data = np.load('train_data.npy')
-test_data = np.load('test_data.npy')
-
-layer = keras.layers.CategoryEncoding(num_tokens=2, output_mode="one_hot")
-test_data = layer.adapt(test_data)
-
-# split data
-X_train, X_test, y_train, y_test = train_test_split(
-    train_data, test_data, test_size=0.2, random_state=42)
-
-print(X_train.shape)
-print(X_test.shape)
-print(y_train.shape)
-print(y_test.shape)
+import tkinter as tk
+from tkinter import ttk
 
 
-fig = plt.figure()
-bin = np.arange(3)
+def center_window(root, width, height):
+    # Get the screen dimension
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
 
-ax = fig.add_subplot(1, 2, 1)
-ax.set_xticks(bin)
-plt.hist(y_train, bins=bin, edgecolor='black')
-plt.title('Train Data')
+    # Find the center point
+    center_x = int(screen_width / 2 - width / 2)
+    center_y = int(screen_height / 2 - height / 2)
 
-ax = fig.add_subplot(1, 2, 2)
-ax.set_xticks(bin)
-plt.hist(y_test, bins=bin, edgecolor='black')
-plt.title('Test Data')
+    # Set the position of the window to the center of the screen
+    root.geometry(f'{width}x{height}+{center_x}+{center_y}')
 
-plt.show()
 
-# if outcome is not good, increase max_trials
-clf = ak.ImageClassifier(project_name='my_image_model', max_trials=3)
-clf.fit(X_train, y_train)
+root = tk.Tk()
+root.title("Centered Window with Scroll View")
 
-clf.evaluate(X_test, y_test)
+# Calculate 2/3 of the screen size
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+width = screen_width * 2 // 3
+height = screen_height * 2 // 3
 
-predicted_y = clf.predict(X_test[:10])
+# Center the window
+center_window(root, width, height)
+
+# Main frame
+main_frame = ttk.Frame(root, padding="10")
+main_frame.pack(fill='both', expand=True)
+
+# Scrollable area
+scroll_frame = ttk.Frame(main_frame)
+scroll_frame.pack(fill='both', expand=True, pady=10)
+
+# Create a canvas for the scrollable area
+canvas = tk.Canvas(scroll_frame)
+canvas.pack(side='left', fill='both', expand=True)
+
+# Add a scrollbar to the canvas
+scrollbar = ttk.Scrollbar(
+    scroll_frame, orient='vertical', command=canvas.yview)
+scrollbar.pack(side='right', fill='y')
+
+# Configure the canvas
+canvas.configure(yscrollcommand=scrollbar.set)
+canvas.bind('<Configure>', lambda e: canvas.configure(
+    scrollregion=canvas.bbox("all")))
+
+# Frame inside the canvas
+scrollable_frame = ttk.Frame(canvas)
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+# Adding example entries
+for i in range(5):
+    ttk.Label(scrollable_frame, text=f"Example Entry {i+1}").pack()
+
+# Input field and send button
+input_frame = ttk.Frame(main_frame)
+input_frame.pack(fill='x')
+
+# Input field
+input_field = ttk.Entry(input_frame)
+input_field.pack(side='left', fill='x', expand=True, padx=(0, 10))
+
+# Send button
+send_button = ttk.Button(input_frame, text="Send")
+send_button.pack(side='right')
+
+root.mainloop()

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import csv
 import PIL
 import os
+from DetectFace import DetectFace
 
 path_gender_csv = None
 with open('merged_data.csv') as file:
@@ -13,6 +14,8 @@ print(path_gender_csv[:10])
 
 train_data = []
 test_data = []
+
+unvalid_paths = []
 
 for file_path, gender in path_gender_csv:
     if gender == 'NaN':
@@ -27,7 +30,13 @@ for file_path, gender in path_gender_csv:
 
     if os.path.exists(file_path):
         # open as grayscale
-        img = PIL.Image.open(file_path).convert('L')
+        img = PIL.Image.open(file_path)
+
+        if not DetectFace(img):
+            unvalid_paths.append(file_path)
+            continue
+
+        img = img.convert('L')
 
         # if pixel size is 1x1, skip
         if img.size[0] == 1 and img.size[1] == 1:
@@ -56,3 +65,9 @@ test_data = np.array(test_data)
 # save to file
 np.save('train_data.npy', train_data)
 np.save('test_data.npy', test_data)
+
+# save unvalid paths to file
+print("found", len(unvalid_paths), "unvalid images")
+with open('unvalid_paths.txt', 'w') as file:
+    for path in unvalid_paths:
+        file.write(path + '\n')
